@@ -1,0 +1,52 @@
+{
+  "name": "forkable-iterator",
+  "version": "1.0.0",
+  "description": "Make a JS Iterator forkable.",
+  "main": "dist/forkable-iterator.js",
+  "module": "dist/forkable-iterator.es.js",
+  "types": "dist/forkable-iterator.d.ts",
+  "keywords": [
+    "iterator",
+    "iterable",
+    "generator",
+    "tee",
+    "fork",
+    "clone"
+  ],
+  "scripts": {
+    "prepare": "husky install",
+    "build": "rm -rf dist && rollup --config rollup.config.js && tsc --declaration --emitDeclarationOnly",
+    "watch": "rollup --config rollup.config.js --watch",
+    "prettier": "prettier --write .",
+    "lint": "prettier --check .",
+    "lint-staged": "lint-staged",
+    "prepublishOnly": "npm run build && npm test",
+    "preversion": "npm run build && npm test",
+    "test": "node --expose-gc ./node_modules/.bin/jest --coverage"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tjenkinson/forkable-iterator.git"
+  },
+  "author": "Tom Jenkinson <tom@tjenkinson.me>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tjenkinson/forkable-iterator/issues"
+  },
+  "homepage": "https://github.com/tjenkinson/forkable-iterator#readme",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^22.0.0",
+    "@rollup/plugin-node-resolve": "^13.3.0",
+    "@rollup/plugin-typescript": "^8.3.2",
+    "@types/jest": "^28.1.1",
+    "@types/node": "18.7.6",
+    "husky": "^8.0.1",
+    "jest": "^28.1.0",
+    "lint-staged": "^13.0.3",
+    "prettier": "^2.6.2",
+    "rollup": "^2.7.2",
+    "ts-jest": "^28.0.4",
+    "tslib": "^2.4.0",
+    "typescript": "^4.7.2"
+  }
+}
