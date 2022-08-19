@@ -4,6 +4,14 @@ Make a JS [`Iterator`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/G
 
 Be aware that if you have a fork that is not consuming values as it gets further and further behind more memory will be used. Make sure you `null` out references to forks that you no longer need to allow garbage collection to occur.
 
+## Installation
+
+```sh
+npm install --save forkable-iterator
+```
+
+Also available on JSDelivr at "https://cdn.jsdelivr.net/npm/forkable-iterator@1".
+
 ## Usage
 
 ```ts
