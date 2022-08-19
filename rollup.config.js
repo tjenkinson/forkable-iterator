@@ -10,7 +10,7 @@ export default {
   },
   output: [
     {
-      name: 'StateManager',
+      name: 'ForkableIterator',
       file: 'dist/forkable-iterator.js',
       format: 'umd',
     },
