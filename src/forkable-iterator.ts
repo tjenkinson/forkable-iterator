@@ -1,4 +1,4 @@
-const forkSymbol: unique symbol = Symbol('fork');
+const forkSymbol = Symbol('fork');
 const pendingItemsSymbol = Symbol('pendingItems');
 
 export type ForkableIterator<T, TReturn = void> = Iterator<
