@@ -1,6 +1,6 @@
 {
   "name": "forkable-iterator",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Make a JS Iterator forkable.",
   "main": "dist/forkable-iterator.js",
   "module": "dist/forkable-iterator.es.js",
