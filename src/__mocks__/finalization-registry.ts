@@ -5,8 +5,8 @@ export function buildFinalizationRegistry<T>(
 ): FinalizationRegistry<T> {
   cleanupSpy = jest.fn();
   const registry = new FinalizationRegistry<T>((...args) => {
-    cleanupSpy(args[0]);
     cleanupCallback(...args);
+    cleanupSpy(args[0]);
   });
   return registry;
 }
