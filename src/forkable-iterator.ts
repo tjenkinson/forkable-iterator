@@ -46,6 +46,7 @@ export function buildForkableIterator<T, TReturn = void>(
       [forkSymbol]() {
         return makeFork(this[pendingItemsSymbol]);
       },
+      [pendingItemsSymbol]: initialPendingItems.slice(0),
       next(value: never): IteratorResult<T, TReturn> {
         if (value !== undefined) {
           throw new Error('`ForkableIterator` `next()` cannot take a value');
@@ -57,7 +58,6 @@ export function buildForkableIterator<T, TReturn = void>(
         }
         return pendingItems.shift()!;
       },
-      [pendingItemsSymbol]: initialPendingItems.slice(0),
     };
 
     const ref = new WeakRef(iterator);
