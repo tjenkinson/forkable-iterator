@@ -1,3 +1,5 @@
+import { buildFinalizationRegistry } from './finalization-registry';
+
 const forkSymbol = Symbol('fork');
 const pendingItemsSymbol = Symbol('pendingItems');
 
@@ -26,7 +28,7 @@ export function buildForkableIterator<T, TReturn = void>(
 ): ForkableIterator<T, TReturn> {
   const onResult: Set<(item: IteratorResult<T, TReturn>) => void> = new Set();
 
-  const registry = new FinalizationRegistry<
+  const registry = buildFinalizationRegistry<
     (item: IteratorResult<T, TReturn>) => void
   >((onResultCallback) => {
     onResult.delete(onResultCallback);

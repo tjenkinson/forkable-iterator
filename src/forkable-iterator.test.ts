@@ -1,8 +1,11 @@
+jest.mock('./finalization-registry');
 import {
   buildForkableIterator,
   ForkableIterator,
   fork,
 } from './forkable-iterator';
+// @ts-ignore
+import { cleanupSpy } from './finalization-registry';
 
 if (!globalThis.gc) {
   throw new Error('node --expose-gc flag required');
@@ -56,9 +59,13 @@ describe('ForkableIterator', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 0));
     gc();
-    await new Promise((resolve) => setTimeout(resolve, 0));
 
-    expect(child2.deref()).toBe(undefined);
+    return new Promise<void>((resolve) => {
+      cleanupSpy.mockImplementation(() => {
+        expect(child2.deref()).toBe(undefined);
+        resolve();
+      });
+    });
   });
 
   it('throws an error if `next()` is given a value', () => {
