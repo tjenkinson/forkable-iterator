@@ -62,7 +62,7 @@ export function buildForkableIterator<T, TReturn = void>(
   });
 
   const readSource = (): void => {
-    const result = (source as Iterator<T, TReturn>).next();
+    const result = source.next();
     onResult.forEach((fn) => fn(result));
   };
 
