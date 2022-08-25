@@ -1,7 +1,7 @@
 import { buildFinalizationRegistry } from './finalization-registry';
 
 const forkSymbol = Symbol('fork');
-const pendingItemsSymbol = Symbol('pendingItems');
+const pendingResultsSymbol = Symbol('pendingResults');
 
 export type ForkableIterator<T, TReturn = void> = Iterator<
   T,
@@ -9,7 +9,26 @@ export type ForkableIterator<T, TReturn = void> = Iterator<
   never
 > & {
   [forkSymbol](): ForkableIterator<T, TReturn>;
-  [pendingItemsSymbol]: IteratorResult<T, TReturn>[];
+  [pendingResultsSymbol]: IteratorResult<T, TReturn>[];
+};
+
+export type ForkableAsyncIterator<T, TReturn = void> = AsyncIterator<
+  T,
+  TReturn,
+  never
+> & {
+  [forkSymbol](): ForkableAsyncIterator<T, TReturn>;
+  [pendingResultsSymbol]: Promise<IteratorResult<T, TReturn>>[];
+};
+
+type InternalResult<T, TReturn> =
+  | IteratorResult<T, TReturn>
+  | Promise<IteratorResult<T, TReturn>>;
+
+type InternalIterator<T, TReturn> = {
+  next: () => InternalResult<T, TReturn>;
+  [forkSymbol](): InternalIterator<T, TReturn>;
+  [pendingResultsSymbol]: InternalResult<T, TReturn>[];
 };
 
 /**
@@ -22,14 +41,22 @@ export type ForkableIterator<T, TReturn = void> = Iterator<
  * values.
  *
  * The returned `ForkableIterator` will not implement `return()` or `throw()` functions.
+ *
+ * This supports both `Iterator` and `AsyncIterator`.
  */
 export function buildForkableIterator<T, TReturn = void>(
   source: Iterator<T, TReturn>
-): ForkableIterator<T, TReturn> {
-  const onResult: Set<(item: IteratorResult<T, TReturn>) => void> = new Set();
+): ForkableIterator<T, TReturn>;
+export function buildForkableIterator<T, TReturn = void>(
+  source: AsyncIterator<T, TReturn>
+): ForkableAsyncIterator<T, TReturn>;
+export function buildForkableIterator<T, TReturn = void>(
+  source: Iterator<T, TReturn> | AsyncIterator<T, TReturn>
+): ForkableIterator<T, TReturn> | ForkableAsyncIterator<T, TReturn> {
+  const onResult: Set<(result: InternalResult<T, TReturn>) => void> = new Set();
 
   const registry = buildFinalizationRegistry<
-    (item: IteratorResult<T, TReturn>) => void
+    (result: InternalResult<T, TReturn>) => void
   >((onResultCallback) => {
     onResult.delete(onResultCallback);
   });
@@ -40,31 +67,31 @@ export function buildForkableIterator<T, TReturn = void>(
   };
 
   const makeFork = (
-    initialPendingItems: IteratorResult<T, TReturn>[]
-  ): ForkableIterator<T, TReturn> => {
-    const iterator: ForkableIterator<T, TReturn> = {
+    initialPendingResults: InternalResult<T, TReturn>[]
+  ): InternalIterator<T, TReturn> => {
+    const iterator: InternalIterator<T, TReturn> = {
       [forkSymbol]() {
-        return makeFork(this[pendingItemsSymbol]);
+        return makeFork(this[pendingResultsSymbol]);
       },
-      [pendingItemsSymbol]: initialPendingItems.slice(0),
-      next(value: never): IteratorResult<T, TReturn> {
+      [pendingResultsSymbol]: initialPendingResults.slice(0),
+      next(value?: never): InternalResult<T, TReturn> {
         if (value !== undefined) {
           throw new Error('`ForkableIterator` `next()` cannot take a value');
         }
 
-        const pendingItems = this[pendingItemsSymbol];
-        if (!pendingItems.length) {
+        const pendingResults = this[pendingResultsSymbol];
+        if (!pendingResults.length) {
           readSource();
         }
-        return pendingItems.shift()!;
+        return pendingResults.shift()!;
       },
     };
 
     const ref = new WeakRef(iterator);
-    const callback = (item: IteratorResult<T, TReturn>): void => {
+    const callback = (result: InternalResult<T, TReturn>): void => {
       const maybeIterator = ref.deref();
       /* istanbul ignore next */
-      maybeIterator?.[pendingItemsSymbol].push(item);
+      maybeIterator?.[pendingResultsSymbol].push(result);
     };
     registry.register(iterator, callback);
     onResult.add(callback);
@@ -72,19 +99,21 @@ export function buildForkableIterator<T, TReturn = void>(
     return iterator;
   };
 
-  return makeFork([]);
+  return makeFork([]) as
+    | ForkableIterator<T, TReturn>
+    | ForkableAsyncIterator<T, TReturn>;
 }
 
 /**
- * Create a fork of the provided `ForkableIterator` at the current point.
+ * Create a fork of the provided `ForkableIterator`/`ForkableAsyncIterator` at the current point.
  */
-export function fork<T, TReturn>(
-  forkableIterator: ForkableIterator<T, TReturn>
-): ForkableIterator<T, TReturn> {
+export function fork<
+  T extends ForkableIterator<any, any> | ForkableAsyncIterator<any, any>
+>(forkableIterator: T): T {
   if (!forkableIterator || !forkableIterator[forkSymbol]) {
     throw new Error(
       'The provided value was not a `ForkableIterator` from `buildForkableIterator()`'
     );
   }
-  return forkableIterator[forkSymbol]();
+  return forkableIterator[forkSymbol]() as T;
 }
