@@ -38,7 +38,7 @@
   },
   "homepage": "https://github.com/tjenkinson/forkable-iterator#readme",
   "devDependencies": {
-    "@rollup/plugin-commonjs": "24.1.0",
+    "@rollup/plugin-commonjs": "25.0.1",
     "@rollup/plugin-node-resolve": "15.1.0",
     "@rollup/plugin-typescript": "11.1.1",
     "@types/jest": "29.5.2",
